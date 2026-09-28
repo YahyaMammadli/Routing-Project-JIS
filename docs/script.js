@@ -3,7 +3,6 @@ const API_BASE_URL = 'http://localhost:5261';
 async function calculateRoute() {
     const from = document.getElementById('from').value.trim();
     const to = document.getElementById('to').value.trim();
-
     const resultDiv = document.getElementById('result');
     const btn = document.getElementById('calculateBtn');
 
@@ -16,303 +15,139 @@ async function calculateRoute() {
     btn.querySelector('.btn-label').textContent = 'Calculating...';
 
     resultDiv.classList.add('visible');
-
     resultDiv.innerHTML = `
         <div class="loading">
             <span class="spinner"></span>
             Fetching route data...
-        </div>
-    `;
+        </div>`;
 
     try {
-        const response = await fetch(
-            `${API_BASE_URL}/api/route/calculate`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    from,
-                    to
-                })
-            }
-        );
+        const response = await fetch(`${API_BASE_URL}/api/route/calculate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from, to })
+        });
+
+        const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            const errorData =
-                await response.json().catch(() => ({}));
-
             throw new Error(
-                errorData.error ||
-                `Request failed with status ${response.status}`
+                data.error || `Request failed with status ${response.status}`
             );
         }
 
-        const data = await response.json();
-
-        console.log('Backend response:', data);
-
         renderResult(data);
-
-    } catch (err) {
-        console.error(err);
-
-        showError(err.message);
-
+    } catch (error) {
+        showError(error.message);
     } finally {
         btn.disabled = false;
-        btn.querySelector('.btn-label').textContent =
-            'Calculate route';
+        btn.querySelector('.btn-label').textContent = 'Calculate route';
     }
 }
-
 
 function renderResult(data) {
     const resultDiv = document.getElementById('result');
+    const providerRoutes = Array.isArray(data.routes) ? data.routes : [];
 
-    if (!data || !Array.isArray(data.routes)) {
-        showError(
-            'Backend returned an unexpected response format.'
-        );
-
-        console.error(
-            'Unexpected backend response:',
-            data
-        );
-
+    if (providerRoutes.length === 0) {
+        showError('No route data was returned by the server.');
         return;
     }
 
-    if (data.routes.length === 0) {
-        showError('No route data was returned.');
-
-        return;
-    }
-
-    const groupedRoutes = {};
-
-    for (const route of data.routes) {
-        const provider =
-            route.provider || 'unknown';
-
-        if (!groupedRoutes[provider]) {
-            groupedRoutes[provider] = [];
-        }
-
-        groupedRoutes[provider].push(route);
-    }
-
-    let html = `
-        <div class="result-title">
-            Route summary
+    resultDiv.innerHTML = `
+        <div class="result-title">Route results</div>
+        <div class="route-meta">
+            <div><strong>From:</strong> ${escapeHtml(data.from)}</div>
+            <div><strong>To:</strong> ${escapeHtml(data.to)}</div>
         </div>
-
-        <div class="result-row">
-            <span class="result-label">
-                From
-            </span>
-
-            <span class="result-value">
-                ${escapeHtml(data.from || '-')}
-            </span>
-        </div>
-
-        <div class="result-row">
-            <span class="result-label">
-                To
-            </span>
-
-            <span class="result-value">
-                ${escapeHtml(data.to || '-')}
-            </span>
-        </div>
-    `;
-
-    for (const [provider, routes] of Object.entries(groupedRoutes)) {
-        html += `
-            <div class="provider-section">
-                <div class="provider-title">
-                    ${escapeHtml(provider)}
-                </div>
-        `;
-
-        for (const route of routes) {
-            html += renderRoute(route);
-        }
-
-        html += `
-            </div>
-        `;
-    }
-
-    resultDiv.innerHTML = html;
+        <div class="providers">
+            ${providerRoutes.map(renderProvider).join('')}
+        </div>`;
 }
 
+function renderProvider(provider) {
+    const providerName = formatProviderName(provider.provider);
+    const modeName = formatModeName(provider.transportMode);
+    const routes = Array.isArray(provider.routes) ? provider.routes : [];
 
-function renderRoute(route) {
-    const transportMode =
-        formatTransportMode(route.transportMode);
-
-    const distance =
-        isNumber(route.distanceKm)
-            ? `${route.distanceKm.toFixed(2)} km`
-            : '-';
-
-    const duration =
-        isNumber(route.durationMinutes)
-            ? `${route.durationMinutes.toFixed(1)} min`
-            : '-';
-
-    const hasNoTraffic =
-        isNumber(route.durationWithoutTrafficMinutes);
-
-    const noTrafficDuration =
-        hasNoTraffic
-            ? `${route.durationWithoutTrafficMinutes.toFixed(1)} min`
-            : '-';
-
-    let trafficHtml = '';
-
-    if (route.trafficAvailable) {
-        trafficHtml = route.trafficUsed
-            ? `
-                <span class="traffic-high">
-                    Available / Used
-                </span>
-            `
-            : `
-                <span class="traffic-medium">
-                    Available / Not used
-                </span>
-            `;
-    } else {
-        trafficHtml = `
-            <span class="result-muted">
-                Not available
-            </span>
-        `;
-    }
-
-    let differenceHtml = '';
-
-    if (
-        hasNoTraffic &&
-        isNumber(route.durationMinutes)
-    ) {
-        const difference =
-            route.durationMinutes -
-            route.durationWithoutTrafficMinutes;
-
-        const sign =
-            difference > 0 ? '+' : '';
-
-        differenceHtml = `
-            <span class="badge">
-                ${sign}${difference.toFixed(1)} min
-            </span>
-        `;
-    }
-
-    let errorHtml = '';
-
-    if (route.error) {
-        errorHtml = `
-            <div class="route-error">
-                ${escapeHtml(route.error)}
-            </div>
-        `;
+    if (routes.length === 0) {
+        return `
+            <section class="provider-card error-provider">
+                <div class="provider-header">
+                    <div>
+                        <div class="provider-name">${escapeHtml(providerName)}</div>
+                        <div class="mode-name">${escapeHtml(modeName)}</div>
+                    </div>
+                    <span class="route-count">No routes</span>
+                </div>
+                <div class="provider-error">${escapeHtml(provider.error || 'Route not found')}</div>
+            </section>`;
     }
 
     return `
-        <div class="route-card">
-
-            <div class="route-header">
-                <span class="transport-title">
-                    ${transportMode}
-                </span>
+        <section class="provider-card">
+            <div class="provider-header">
+                <div>
+                    <div class="provider-name">${escapeHtml(providerName)}</div>
+                    <div class="mode-name">${escapeHtml(modeName)}</div>
+                </div>
+                <span class="route-count">${routes.length} ${routes.length === 1 ? 'route' : 'routes'}</span>
             </div>
 
-            <div class="result-row">
-                <span class="result-label">
-                    Distance
-                </span>
-
-                <span class="result-value">
-                    ${distance}
-                </span>
+            <div class="traffic-info">
+                Traffic: ${provider.trafficUsed ? 'Used' : provider.trafficAvailable ? 'Available' : 'Not available'}
             </div>
 
-            <div class="result-row">
-                <span class="result-label">
-                    Travel time
-                </span>
-
-                <span class="result-value">
-                    ${duration}
-                    ${differenceHtml}
-                </span>
+            <div class="route-list">
+                ${routes.map(renderRoute).join('')}
             </div>
-
-            <div class="result-row">
-                <span class="result-label">
-                    Without traffic
-                </span>
-
-                <span class="result-value">
-                    ${noTrafficDuration}
-                </span>
-            </div>
-
-            <div class="result-row">
-                <span class="result-label">
-                    Traffic
-                </span>
-
-                <span class="result-value">
-                    ${trafficHtml}
-                </span>
-            </div>
-
-            ${errorHtml}
-
-        </div>
-    `;
+        </section>`;
 }
 
+function renderRoute(route) {
+    return `
+        <div class="route-option">
+            <div class="route-option-header">
+                <span class="route-number">Route ${route.routeNumber}</span>
+                ${route.algorithm ? `<span class="algorithm">${escapeHtml(route.algorithm)}</span>` : ''}
+            </div>
 
-function formatTransportMode(mode) {
-    if (!mode) {
-        return 'Unknown';
-    }
-
-    switch (mode.toLowerCase()) {
-        case 'car':
-            return '🚗 Car';
-
-        case 'bicycle':
-        case 'bike':
-            return '🚲 Bicycle';
-
-        case 'scooter':
-            return '🛴 Scooter';
-
-        default:
-            return mode;
-    }
+            <div class="route-stats">
+                <div class="stat">
+                    <span class="stat-label">Distance</span>
+                    <span class="stat-value">${formatNumber(route.distanceKm)} km</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Time</span>
+                    <span class="stat-value">${formatNumber(route.durationMinutes)} min</span>
+                </div>
+            </div>
+        </div>`;
 }
 
-
-function isNumber(value) {
-    return (
-        typeof value === 'number' &&
-        Number.isFinite(value)
-    );
+function formatProviderName(name) {
+    if (!name) return 'Unknown provider';
+    return name.toLowerCase() === '2gis' ? '2GIS' :
+           name.toLowerCase() === 'yandex' ? 'Yandex' : name;
 }
 
+function formatModeName(mode) {
+    const names = {
+        car: '🚗 Car',
+        bicycle: '🚲 Bicycle',
+        scooter: '🛴 Scooter'
+    };
+
+    return names[(mode || '').toLowerCase()] || mode || 'Unknown mode';
+}
+
+function formatNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toFixed(2) : '—';
+}
 
 function escapeHtml(value) {
-    return String(value)
+    return String(value ?? '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -320,16 +155,8 @@ function escapeHtml(value) {
         .replaceAll("'", '&#039;');
 }
 
-
 function showError(message) {
-    const resultDiv =
-        document.getElementById('result');
-
+    const resultDiv = document.getElementById('result');
     resultDiv.classList.add('visible');
-
-    resultDiv.innerHTML = `
-        <div class="error">
-            ⚠️ ${escapeHtml(message)}
-        </div>
-    `;
+    resultDiv.innerHTML = `<div class="error">⚠️ ${escapeHtml(message)}</div>`;
 }
