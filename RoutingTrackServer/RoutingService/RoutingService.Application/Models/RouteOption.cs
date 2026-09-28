@@ -6,6 +6,5 @@ public class RouteOption
     public string? RouteId { get; init; }
     public double DistanceKm { get; init; }
     public double DurationMinutes { get; init; }
-    public double? DurationWithoutTrafficMinutes { get; init; }
     public string? Algorithm { get; init; }
 }

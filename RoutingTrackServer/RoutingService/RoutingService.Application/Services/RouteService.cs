@@ -1,69 +1,41 @@
-using RoutingService.Application.Interfaces;
+﻿using RoutingService.Application.Interfaces;
 using RoutingService.Application.Models;
 using RoutingService.Domain.Entities;
+using TwoGisRouteServer.Application.Interfaces;
 
 namespace RoutingService.Application.Services;
 
-public class RouteService(
-    IRoutingAggregatorService routingAggregatorService,
-    IRouteLogRepository routeLogRepository) : IRouteService
+public class RouteService(IRoutingAggregatorService routingAggregatorService, IRouteLogRepository routeLogRepository) : IRouteService
 {
-    public async Task<MultiProviderRouteResult> CalculateAndLogAsync(
-        RouteCalculationRequest request,
-        CancellationToken cancellationToken = default)
+    public async Task<MultiProviderRouteResult> CalculateAndLogAsync(RouteCalculationRequest request, CancellationToken cancellationToken = default)
     {
-        var result = await routingAggregatorService.CalculateAsync(
-            request,
-            cancellationToken);
+        var result = await routingAggregatorService.CalculateAsync(request, cancellationToken);
 
-        foreach (var providerRoute in result.Routes)
+        foreach (var route in result.Routes)
         {
-            if (providerRoute.Routes.Count == 0)
+            var log = new RouteLog
             {
-                // Preserve provider errors in the log even when no route was found.
-                await routeLogRepository.AddAsync(
-                    new RouteLog
-                    {
-                        FromAddress = result.From,
-                        ToAddress = result.To,
-                        Provider = providerRoute.Provider,
-                        TransportMode = providerRoute.TransportMode,
-                        RequestedAt = result.RequestedAt,
-                        DistanceKm = providerRoute.DistanceKm,
-                        DurationMinutes = providerRoute.DurationMinutes,
-                        DurationWithoutTrafficMinutes = providerRoute.DurationWithoutTrafficMinutes,
-                        TrafficAvailable = providerRoute.TrafficAvailable,
-                        TrafficUsed = providerRoute.TrafficUsed,
-                        Error = providerRoute.Error
-                    },
-                    cancellationToken);
+                FromAddress = result.From,
+                ToAddress = result.To,
 
-                continue;
-            }
+                Provider = route.Provider,
+                TransportMode = route.TransportMode,
 
-            // A provider can return several alternatives (2GIS).
-            // Store each returned alternative as a separate log record.
-            foreach (var route in providerRoute.Routes)
-            {
-                await routeLogRepository.AddAsync(
-                    new RouteLog
-                    {
-                        FromAddress = result.From,
-                        ToAddress = result.To,
-                        Provider = providerRoute.Provider,
-                        TransportMode = providerRoute.TransportMode,
-                        RequestedAt = result.RequestedAt,
-                        DistanceKm = route.DistanceKm,
-                        DurationMinutes = route.DurationMinutes,
-                        DurationWithoutTrafficMinutes =
-                            route.DurationWithoutTrafficMinutes ??
-                            providerRoute.DurationWithoutTrafficMinutes,
-                        TrafficAvailable = providerRoute.TrafficAvailable,
-                        TrafficUsed = providerRoute.TrafficUsed,
-                        Error = null
-                    },
-                    cancellationToken);
-            }
+                RequestedAt = result.RequestedAt,
+
+                DistanceKm = route.DistanceKm,
+                DurationMinutes = route.DurationMinutes,
+
+                DurationWithoutTrafficMinutes =
+                    route.DurationWithoutTrafficMinutes,
+
+                TrafficAvailable = route.TrafficAvailable,
+                TrafficUsed = route.TrafficUsed,
+
+                Error = route.Error
+            };
+
+            await routeLogRepository.AddAsync(log, cancellationToken);
         }
 
         await routeLogRepository.SaveChangesAsync(cancellationToken);
