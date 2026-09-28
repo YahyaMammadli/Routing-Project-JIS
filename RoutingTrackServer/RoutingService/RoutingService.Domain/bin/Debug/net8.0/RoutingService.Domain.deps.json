@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "RoutingService.Domain/1.0.0": {
+        "runtime": {
+          "RoutingService.Domain.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "RoutingService.Domain/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

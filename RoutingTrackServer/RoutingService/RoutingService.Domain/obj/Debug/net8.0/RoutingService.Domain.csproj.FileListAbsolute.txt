@@ -1,0 +1,11 @@
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\bin\Debug\net8.0\RoutingService.Domain.deps.json
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\bin\Debug\net8.0\RoutingService.Domain.dll
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\bin\Debug\net8.0\RoutingService.Domain.pdb
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.AssemblyInfoInputs.cache
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.AssemblyInfo.cs
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.csproj.CoreCompileInputs.cache
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.dll
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\refint\RoutingService.Domain.dll
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\RoutingService.Domain.pdb
+C:\Users\ACER\Desktop\RoutingTrackServer\RoutingService\RoutingService.Domain\obj\Debug\net8.0\ref\RoutingService.Domain.dll

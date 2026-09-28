@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic & Route Estimator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚦 Traffic & Route Estimator</h1>
+            <p class="subtitle">Live traffic, travel time and taxi price estimate</p>
+        </header>
+
+        <div class="card">
+            <div class="form-group">
+                <label for="from">From</label>
+                <input
+                    type="text"
+                    id="from"
+                    placeholder="e.g. 100 Krasny Prospekt, Novosibirsk"
+                    autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="to">To</label>
+                <input
+                    type="text"
+                    id="to"
+                    placeholder="e.g. 1 Lenin Square, Novosibirsk"
+                    autocomplete="off">
+            </div>
+
+            <button id="calculateBtn" onclick="calculateRoute()">
+                <span class="btn-label">Calculate route</span>
+            </button>
+        </div>
+
+        <div id="result" class="result-card"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
