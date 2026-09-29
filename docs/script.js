@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5261';
+const API_BASE_URL = 'http://169.58.201.167';
 
 async function calculateRoute() {
     const from = document.getElementById('from').value.trim();
